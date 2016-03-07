@@ -23,11 +23,10 @@ class Team(object):
         self.button.add(textorientation="top")
         statusfontclr = STATUSFONTCLRPLAYING
         if (self.playingnow):
-            if (self.roundsplayed >= MAXROUNDS):
+            self.status = "Now playing round #" + str(self.roundsplayed + 1)
+        elif (self.roundsplayed >= 1):
                 self.status = "Completed " + str(self.roundsplayed) + " rounds"
                 statusfontclr = STATUSFONTCLRCOMPLETED
-            else:
-                self.status = "Now playing round #" + str(self.roundsplayed + 1)
         statusfontsz = scorefontsz = int(self.button.width/11)
         if(statusfontsz > 18):
             statusfontsz = scorefontsz = 18
@@ -70,7 +69,7 @@ class Button(object):
         textpos = text.get_rect()
         textpos.centerx = self.rect.centerx
         if (textorientation=="top"):
-            textpos.centery = self.top + 4*PADDING
+            textpos.top = self.top + PADDING
         else:
             textpos.centery = self.rect.centery
         self.display.screen.blit(text, textpos)
@@ -209,16 +208,14 @@ class GameClock(object):
         else:
             self.clockReset = True
             return
-    '''
-    def draw(self):
-        self.clockArea = scoreboard.addButton(self.left, self.top, CLOCKWIDTH, CLOCKHEIGHT,color)
-        scoreboard.addText(self.timedisplay, WHITE, self.left + PADDING, self.top + PADDING, 180)
-    '''
+
     def reset(self):
-        self.clock.name = str("%5.2f" % (0.00))
         self.button['Start'].name = "Start"
-        self.clock.update()
+        self.button['Start'].color = CLKBTNCLR
         self.button['Start'].update()
+        self.clock.name = str("%5.2f" % (0.00))
+        self.clock.update()
+
 
 class LeaderBoard():
     def __init__(self,display):
@@ -229,10 +226,10 @@ class LeaderBoard():
         self.height = LDRBRDHEIGHT
         self.rect = pygame.draw.rect(display.screen, BLACK, (self.left, self.top, self.width, self.height),2)
         #Calculate button height
-        self.leaderheight = int(LDRBRDHEIGHT/len(felteams) - 1.8*PADDING)
+        self.leaderheight = int(LDRBRDHEIGHT/(len(felteams) +1) - PADDING)
         self.leaderfontsz = fitfontsize(self.display, LDRFONT, self.width - 4*PADDING, self.leaderheight, LDRNAME)
         self.leaderboardlabel = Button(self.display, self.left+PADDING, 2*PADDING, self.width - 2*PADDING, self.leaderheight, LDRNAME, font=LDRFONT, fontsize=self.leaderfontsz, fontcolor=LDRNAMECLR)
-        self.leaderboardlabel.add()
+        self.leaderboardlabel.add("top")
         self.leaderbutton = {}
         self.update()
 
@@ -268,9 +265,9 @@ def getteams():
         felteam[team] = Team(name=team)
     return felteams
 
-def pickTeam():
+def pickTeam(currentround):
     team = waitOnButtons(teamButton.values())
-    while felteam[team].roundsplayed >= MAXROUNDS:
+    while felteam[team].roundsplayed >= currentround:
         team = waitOnButtons(teamButton.values())
     return team
 
@@ -337,17 +334,17 @@ if __name__ == '__main__':
     teamsplayed = 0
 
 # Input the initial teams
-    while teamsplayed < len(felteams):
-        teamsplayed += 1
-        gamearea.teamplaying.name="Pick team"
-        gamearea.update()
-        playingnow = pickTeam()
-        gamearea.teamplaying.name=playingnow
-        gamearea.update()
-        felteam[playingnow].playingnow = True
-        felteam[playingnow].update()
-
-        for currentround in range(1,MAXROUNDS+1):
+    for currentround in range(1,MAXROUNDS+1):
+        teamsplayed = 0
+        while teamsplayed < len(felteams):
+            teamsplayed += 1
+            gamearea.teamplaying.name="Pick team"
+            gamearea.update()
+            playingnow = pickTeam(currentround)
+            gamearea.teamplaying.name=playingnow
+            gamearea.update()
+            felteam[playingnow].playingnow = True
+            felteam[playingnow].update()
             gamearea.update(currentround)
             felteam[playingnow].update()
             gameclock = GameClock(scoreboard)
@@ -358,10 +355,10 @@ if __name__ == '__main__':
             else:
                 felteam[playingnow].score = round(gameclock.elapsedtime, 2)
             felteam[playingnow].roundsplayed = currentround
+            felteam[playingnow].playingnow = False
             felteam[playingnow].update()
-        felteam[playingnow].playingnow = False
-        leaderboard.update()
+            leaderboard.update()
 
     gamearea.teamplaying.name="GAME OVER"
     gamearea.update()
-    time.sleep(10)
+    time.sleep(100)
