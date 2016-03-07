@@ -111,7 +111,7 @@ class TeamArea():
         teamboxtop = SBHEIGHT - TEAMAREAHEIGHT
         buttonsinrow = int ((len(felteams) + 3 - len(felteams)%3)/3)
         teambuttonwidth = int(TEAMAREAWIDTH / buttonsinrow - 2*PADDING)
-        fontsize = fitfontsize(self.display, TEAMFONT, teambuttonwidth - PADDING)
+        fontsize = fitfontsize(self.display, TEAMFONT, teambuttonwidth - PADDING, TEAMBUTTONHEIGHT)
         print( fontsize)
         for team in felteams:
             teamButton[team] = Button(scoreboard, teamboxleft,teamboxtop, teambuttonwidth,TEAMBUTTONHEIGHT, team, color=LTGRAY, fontsize=fontsize)
@@ -132,7 +132,7 @@ class GameArea():
         self.rect = pygame.draw.rect(self.display.screen, WHITE, (self.left, self.top, self.width, self.height))
         self.rect = pygame.draw.rect(self.display.screen, BLACK, (self.left, self.top, self.width, self.height), 2)
         self.roundButton = Button(self.display, self.left + 4*PADDING, self.top + PADDING, self.width - 8*PADDING, ROUNDHEIGHT, "", color=WHITE, font=ROUNDFONT, fontcolor=ROUNDFONTCOLOR, fontsize=ROUNDFONTSZ )
-        fontsize = fitfontsize(self.display, GAMETEAMFONT, GAMEAREAWIDTH - PADDING)
+        fontsize = fitfontsize(self.display, GAMETEAMFONT, GAMEAREAWIDTH - PADDING, GAMEAREAHEIGHT - PADDING)
         self.teamplaying = Button(self.display, self.left + (self.width - GAMETEAMWIDTH) / 2, self.top + ROUNDHEIGHT + 2 * PADDING, GAMETEAMWIDTH, GAMETEAMHEIGHT, "Pick team", color=GAMETEAMCOLOR, font=GAMETEAMFONT, fontsize=fontsize, fontcolor=GAMETEAMFONTCLR)
 
     def update(self, currentround=0):
@@ -230,7 +230,7 @@ class LeaderBoard():
         self.rect = pygame.draw.rect(display.screen, BLACK, (self.left, self.top, self.width, self.height),2)
         #Calculate button height
         self.leaderheight = int(LDRBRDHEIGHT/len(felteams) - 1.8*PADDING)
-        self.leaderfontsz = fitfontsize(self.display, LDRFONT, self.width - 4*PADDING, LDRNAME)
+        self.leaderfontsz = fitfontsize(self.display, LDRFONT, self.width - 4*PADDING, self.leaderheight, LDRNAME)
         self.leaderboardlabel = Button(self.display, self.left+PADDING, 2*PADDING, self.width - 2*PADDING, self.leaderheight, LDRNAME, font=LDRFONT, fontsize=self.leaderfontsz, fontcolor=LDRNAMECLR)
         self.leaderboardlabel.add()
         self.leaderbutton = {}
@@ -318,12 +318,12 @@ def whichButtonPressed(buttonlist):
                 if (button.rect.collidepoint(pos)):
                     return button.name
 
-def fitfontsize(display, font, width, textstr="OOOOOOOOOO"):
+def fitfontsize(display, font, width, height, textstr="OOOOOOOOOO"):
     for fontsize in range(1,300):
         display.font = pygame.font.SysFont(font, fontsize)
         text = display.font.render(textstr, True, WHITE)
         textpos = text.get_rect()
-        if textpos.width > width:
+        if (textpos.width > width) or (textpos.height > height/2):
             return fontsize - 1
 
 if __name__ == '__main__':
