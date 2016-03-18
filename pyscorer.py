@@ -17,6 +17,7 @@ class Team(object):
         self.color = BLUE
         self.playingnow = False
         self.roundsplayed = 0
+        self.penalty = 0
 
     def add(self):
         self.button = teamButton[self.name]
@@ -54,6 +55,7 @@ class Button(object):
         self.width = width
         self.height = height
         self.name = name
+        self.subname = ""
         self.color = color
         self.font = font
         self.fontsize = fontsize
@@ -73,6 +75,17 @@ class Button(object):
         else:
             textpos.centery = self.rect.centery
         self.display.screen.blit(text, textpos)
+        print ("self.subname is = ", self.subname)
+        if self.subname != "":
+            self.display.font = pygame.font.SysFont(self.font, int(self.fontsize/2))
+            subtext = self.display.font.render(self.subname, True, self.fontcolor)
+            textpos = subtext.get_rect()
+            textpos.centerx = self.rect.centerx
+            if (textorientation=="top"):
+                textpos.top = self.top + PADDING + self.fontsize
+            else:
+                textpos.centery = self.rect.centery + PADDING + self.fontsize
+            self.display.screen.blit(subtext, textpos)
         pygame.display.update()
 
     update = add
@@ -147,7 +160,7 @@ class GameClock(object):
     def __init__(self, display):
         self.left = int(AREAWIDTH - 2*PADDING - CLOCKWIDTH - CLOCKBUTTONWIDTH)
         self.top = PADDING
-        self.controls = ['Start', 'Finish']
+        self.controls = ['Start', 'Finish', 'Penalty']
         self.button = {}
         self.elapsedtime = 0
         self.lapstart = time.time()
@@ -155,11 +168,14 @@ class GameClock(object):
         self.clockReset = False
         self.clockStopped = False
         self.display = display
+        self.penalty = 0
         self.timedisplay="0.00"
         self.button['Start'] = Button(self.display, self.left + CLOCKWIDTH + PADDING, self.top + 3*PADDING, CLOCKBUTTONWIDTH , CLOCKBUTTONHEIGHT, "Start", color=CLKBTNCLR, font=CLKBTNFONT, fontsize=CLKBTNFNTSZ, fontcolor=CLKBTNFNTCLR)
         self.button['Start'].add()
         self.button['Finish'] = Button(self.display, self.left + CLOCKWIDTH + PADDING, self.top + 4*PADDING + CLOCKBUTTONHEIGHT, CLOCKBUTTONWIDTH , CLOCKBUTTONHEIGHT, "Finish", color=CLKBTNCLR, font=CLKBTNFONT, fontsize=CLKBTNFNTSZ, fontcolor=CLKBTNFNTCLR)
         self.button['Finish'].add()
+        self.button['Penalty'] = Button(self.display, self.left + CLOCKWIDTH + PADDING, self.top + 5*PADDING + 2*CLOCKBUTTONHEIGHT, CLOCKBUTTONWIDTH , CLOCKBUTTONHEIGHT, "Penalty", color=CLKBTNCLR, font=CLKBTNFONT, fontsize=CLKBTNFNTSZ, fontcolor=CLKBTNFNTCLR)
+        self.button['Penalty'].add()
         self.clock = Button(self.display, self.left, self.top + 3 * PADDING, CLOCKWIDTH, CLOCKHEIGHT,"", CLOCKCOLOR, font=CLOCKFONT, fontsize=CLOCKFONTSZ, fontcolor=CLOCKFONTCLR)
         self.reset()
 
@@ -174,9 +190,10 @@ class GameClock(object):
         self.roundstart = time.time()
         self.roundend = self.roundstart + GAMETIMESECS
         self.lapstart = time.time()
+        penaltytime = 0
         while (not self.clockReset):
             if (not self.clockStopped):
-                self.elapsedtime = self.stoppedtime + time.time() - self.lapstart
+                self.elapsedtime = self.stoppedtime + time.time() - self.lapstart + penaltytime
             else:
                 self.clockStopped = False
             self.clock.name = str("%5.2f" % (self.elapsedtime))
@@ -192,6 +209,18 @@ class GameClock(object):
                 elif (clockButtonPressed == 'Finish'):
                     self.reset()
                     self.clockReset = True
+                elif (clockButtonPressed == 'Penalty'):
+                    self.penalty += 1
+                    self.showpenalty()
+                    penaltytime += PENALTYPTS
+                    print ("Got a penalty press, penalty = ", self.penalty)
+
+
+    def showpenalty(self):
+        if self.penalty > 0:
+            self.button['Penalty'].subname = str(self.penalty)
+            self.button['Penalty'].update()
+
 
     def stop(self):
         print("GAME STOPPED")
@@ -213,6 +242,9 @@ class GameClock(object):
         self.button['Start'].name = "Start"
         self.button['Start'].color = CLKBTNCLR
         self.button['Start'].update()
+        self.button['Penalty'].subname = ""
+        self.button['Penalty'].update()
+        self.penalty = 0
         self.clock.name = str("%5.2f" % (0.00))
         self.clock.update()
 
